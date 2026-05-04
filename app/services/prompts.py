@@ -2,19 +2,15 @@ def build_bant_prompt(email_text: str) -> str:
     return f"""
 SYSTEM:
 You are a strict JSON generator for B2B sales intelligence.
-
 RULES:
 - Output ONLY valid JSON
 - No markdown
 - No explanations
 - If you fail, return: {{"error":"invalid_output"}}
-
 TASK:
 Analyze the email and extract BANT signals.
-
 EMAIL:
 \"\"\"{email_text}\"\"\"
-
 OUTPUT FORMAT:
 {{
   "sentiment": "positive",
@@ -25,7 +21,6 @@ OUTPUT FORMAT:
   "score": 0.0,
   "summary": "short summary"
 }}
-
 RULES:
 - sentiment: positive, neutral, negative
 - budget: low, medium, high

@@ -11,6 +11,7 @@ def extract_need(text: str) -> dict:
                 "score": 0.9,
                 "reason": f"Strong intent keyword: '{word}'"
             }
+
     for word in medium:
         if word in text:
             return {
@@ -18,6 +19,7 @@ def extract_need(text: str) -> dict:
                 "score": 0.6,
                 "reason": f"Moderate intent keyword: '{word}'"
             }
+
     return {
         "value": "low",
         "score": 0.2,

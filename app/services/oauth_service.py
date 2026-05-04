@@ -5,7 +5,6 @@ from app.core.security import create_access_token
 
 flow_store = {}
 
-
 class OAuthService:
     SCOPES = [
         "openid",
@@ -35,34 +34,25 @@ class OAuthService:
         flow = flow_store.get(state)
         if not flow:
             raise Exception("Invalid OAuth state")
-
         flow.fetch_token(code=code)
         credentials = flow.credentials
-
         gmail = build("gmail", "v1", credentials=credentials)
         profile = gmail.users().getProfile(userId="me").execute()
-
         email = profile.get("emailAddress")
         if not email:
             raise Exception("Email not found")
-
         user = db.query(User).filter(User.email == email).first()
 
         if not user:
             user = User(email=email)
             db.add(user)
-
         user.access_token = credentials.token
         user.refresh_token = credentials.refresh_token
         user.token_expiry = credentials.expiry
-
         db.commit()
         db.refresh(user)
-
         token = create_access_token({"sub": user.email})
-
         flow_store.pop(state, None)
-
         return {
             "access_token": token,
             "token_type": "bearer",

@@ -5,14 +5,13 @@ from app.models.user import User
 from app.api.deps import get_db
 
 router = APIRouter()
-
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "email": current_user.email,
     }
-    
+        
 @router.get("/")
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(User).all()

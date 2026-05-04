@@ -3,7 +3,6 @@ from app.services.ai_service import AIService
 
 ai_service = AIService()
 
-
 @celery_app.task(name="analyze_email_task")
 def analyze_email_task(email_text: str):
     import asyncio

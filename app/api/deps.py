@@ -20,6 +20,7 @@ def get_current_user(
 ):
     token = credentials.credentials
     payload = verify_access_token(token)
+    
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -27,6 +28,7 @@ def get_current_user(
         )
     email = payload.get("sub")
     user = db.query(User).filter(User.email == email).first()
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

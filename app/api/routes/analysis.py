@@ -7,7 +7,6 @@ router = APIRouter()
 
 @router.get("/{email_id}")
 def get_analysis(email_id: int, db: Session = Depends(get_db)):
-
     total = db.query(EmailAnalysis).count()
     print("TOTAL ANALYSIS ROWS:", total)
 
