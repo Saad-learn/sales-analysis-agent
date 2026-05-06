@@ -6,7 +6,6 @@ RULES:
 - Output ONLY valid JSON
 - No markdown
 - No explanations
-- If you fail, return: {{"error":"invalid_output"}}
 TASK:
 Analyze the email and extract BANT signals.
 EMAIL:
@@ -21,11 +20,4 @@ OUTPUT FORMAT:
   "score": 0.0,
   "summary": "short summary"
 }}
-RULES:
-- sentiment: positive, neutral, negative
-- budget: low, medium, high
-- authority: low, medium, high
-- need: low, medium, high
-- timeline: immediate, short_term, long_term
-- score: 0.0 - 1.0
 """

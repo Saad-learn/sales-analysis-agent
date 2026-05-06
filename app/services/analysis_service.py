@@ -1,52 +1,58 @@
+import asyncio
 import logging
-import os
-from app.services.ollama_client import OllamaClient
-from app.services.prompts import build_bant_prompt
-from app.services.json_parser import safe_json_parse
+from app.workers.celery_app import celery_app
+from app.services.ai_service import AIService
+from app.db.database import SessionLocal
+from app.models.analysis import EmailAnalysis
+from app.services.extractors.budget import extract_budget
+from app.services.extractors.authority import extract_authority
+from app.services.extractors.need import extract_need
+from app.services.extractors.timeline import extract_timeline
 
 logger = logging.getLogger(__name__)
+ai_service = AIService()
 
-class AIService:
-    def __init__(self):
-        self.client = OllamaClient(
-            model=os.getenv("OLLAMA_MODEL", "phi:latest")
-        )
+@celery_app.task(name="analyze_email_task")
+def analyze_email_task(email_id: int, email_text: str):
+    try:
+        ai_result = asyncio.run(ai_service.analyze_email(email_text))
+    except Exception as e:
+        logger.error(f"AI Service Failure: {e}")
+        ai_result = {}
 
-    async def analyze_email(self, email_text: str):
+    regex_results = {
+        "budget": extract_budget(email_text),
+        "authority": extract_authority(email_text),
+        "need": extract_need(email_text),
+        "timeline": extract_timeline(email_text)
+    }
+
+    def get_best_value(key):
+        ai_val = ai_result.get(key)
+        if ai_val and ai_val != "unknown":
+            return ai_val
         
-        if not email_text:
-            return {"error": "empty_email"}
-        prompt = build_bant_prompt(email_text[:3000])
+        reg_val = regex_results[key].get("value")
+        return str(reg_val) if reg_val else "unknown"
 
-        try:
-            response = await self.client.generate(prompt)
-            raw_output = response.get("response", "")
-
-            if not raw_output:
-                return {"error": "empty_ai_response"}
-            data = safe_json_parse(raw_output)
-
-            if not data:
-                logger.error(f"Invalid JSON from model: {raw_output}")
-                return {"error": "invalid_json"}
-            bant = data.get("bant", {})
-
-            def get_value(key):
-                value = bant.get(key, data.get(key))
-                if isinstance(value, dict):
-                    return value.get("value", "Not mentioned")
-                return value if value else "Not mentioned"
-
-            return {
-                "sentiment": data.get("sentiment", "neutral"),
-                "budget": get_value("budget"),
-                "authority": get_value("authority"),
-                "need": get_value("need"),
-                "timeline": get_value("timeline"),
-                "score": data.get("score", 0),
-                "summary": data.get("summary", "No summary provided"),
-            }
-
-        except Exception as e:
-            logger.exception("AI analysis failed")
-            return {"error": str(e)}
+    db = SessionLocal()
+    try:
+        analysis = EmailAnalysis(
+            email_id=email_id,
+            sentiment=ai_result.get("sentiment", "neutral"),
+            budget=get_best_value("budget"),
+            authority=get_best_value("authority"),
+            need=get_best_value("need"),
+            timeline=get_best_value("timeline"),
+            score=float(ai_result.get("score", 0.0)),
+            summary=ai_result.get("summary", "Analysis completed")
+        )
+        db.add(analysis)
+        db.commit()
+        return {"status": "success", "email_id": email_id}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database Error: {e}")
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()

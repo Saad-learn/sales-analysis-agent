@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from datetime import datetime
 from app.db.database import Base
 
-
 class EmailAnalysis(Base):
     __tablename__ = "email_analysis"
 

@@ -2,8 +2,9 @@ from .utils import normalize, contains_negation
 
 def extract_need(text: str) -> dict:
     text = normalize(text)
-    strong = ["need", "require", "must", "urgent requirement"]
-    medium = ["looking for", "interested in", "considering", "exploring"]
+    strong = ["need", "require", "must", "urgent requirement", "essential", "critical"]
+    medium = ["looking for", "interested in", "considering", "exploring", "evaluating"]
+    
     for word in strong:
         if word in text and not contains_negation(text, word):
             return {
@@ -13,7 +14,7 @@ def extract_need(text: str) -> dict:
             }
 
     for word in medium:
-        if word in text:
+        if word in text and not contains_negation(text, word):
             return {
                 "value": "medium",
                 "score": 0.6,

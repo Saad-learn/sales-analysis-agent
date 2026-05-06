@@ -3,8 +3,8 @@ from .utils import normalize, contains_negation
 def extract_authority(text: str) -> dict:
     text = normalize(text)
     roles = [
-        "ceo", "founder", "owner", "director",
-        "manager", "head", "lead", "decision maker"
+        "ceo", "founder", "owner", "director", "cto", "cfo",
+        "manager", "head", "lead", "decision maker", "vp"
     ]
     
     for role in roles:
@@ -15,12 +15,14 @@ def extract_authority(text: str) -> dict:
                 "reason": f"Decision-making role detected: '{role}'"
             }
     
-    if "team" in text or "we will decide" in text:
-        return {
-            "value": "medium",
-            "score": 0.5,
-            "reason": "Collective decision context"
-        }
+    collaborative_terms = ["team", "we will decide", "board", "committee"]
+    for term in collaborative_terms:
+        if term in text:
+            return {
+                "value": "medium",
+                "score": 0.5,
+                "reason": f"Collaborative context: '{term}'"
+            }
     
     return {
         "value": "low",

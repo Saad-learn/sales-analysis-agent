@@ -13,6 +13,7 @@ class BantSchema(BaseModel):
         "timeline",
         mode="before"
     )
+
     def clean_values(cls, value):
         if value is None:
             return None

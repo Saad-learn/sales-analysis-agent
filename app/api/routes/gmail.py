@@ -20,7 +20,6 @@ def fetch_gmail_emails(user_id: int, db: Session = Depends(get_db)):
             detail="Google OAuth login required first",
         )
     task = fetch_user_emails_task.delay(user_id)
-    
     return {
         "message": "Email fetching started",
         "task_id": task.id,

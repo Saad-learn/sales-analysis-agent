@@ -3,9 +3,10 @@ from .utils import normalize
 
 def extract_timeline(text: str) -> dict:
     text = normalize(text)
-    urgent = ["asap", "urgent", "immediately", "today", "now"]
-    short_term = ["tomorrow", "this week", "few days", "next week"]
-    long_term = ["next month", "quarter", "later", "future"]
+    urgent = ["asap", "urgent", "immediately", "today", "now", "yesterday"]
+    short_term = ["tomorrow", "this week", "few days", "next week", "soon"]
+    long_term = ["next month", "quarter", "later", "future", "next year"]
+    
     for word in urgent:
         if word in text:
             return {
@@ -17,7 +18,7 @@ def extract_timeline(text: str) -> dict:
     for word in short_term:
         if word in text:
             return {
-                "value": "short",
+                "value": "short_term",
                 "score": 0.7,
                 "reason": f"Short-term timeline: '{word}'"
             }
@@ -25,14 +26,14 @@ def extract_timeline(text: str) -> dict:
     for word in long_term:
         if word in text:
             return {
-                "value": "long",
-                "score": 0.6,
+                "value": "long_term",
+                "score": 0.5,
                 "reason": f"Long-term timeline: '{word}'"
             }
 
-    if re.search(r"in \d+ (day|days|week|weeks)", text):
+    if re.search(r"in \d+ (day|week|month)", text):
         return {
-            "value": "short",
+            "value": "short_term",
             "score": 0.75,
             "reason": "Relative time expression detected"
         }
